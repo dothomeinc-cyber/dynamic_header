@@ -1,0 +1,17 @@
+name: dynamic_sliver_header_example
+description: Example app for the dynamic_sliver_header package.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  dynamic_sliver_header:
+    path: ../
+
+flutter:
+  uses-material-design: true

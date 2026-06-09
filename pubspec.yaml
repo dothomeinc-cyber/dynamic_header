@@ -1,0 +1,19 @@
+name: dynamic_sliver_header
+description: "A fully dynamic animated SliverPersistentHeader package. Builder API, animation timing ranges, parallax, collapsed child replacement, sticky tabs, state callbacks, and theme-based presets."
+version: 2.0.0
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_screenutil: ^5.9.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
