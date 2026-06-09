@@ -1,6 +1,6 @@
-Here's the complete README.md with the additional content integrated:
+Here's the updated README.md with the manual examples added:
 
-## **README.md**
+## **README.md** (Updated with Manual Examples)
 
 ```markdown
 # dynamic_sliver_header
@@ -315,6 +315,478 @@ TextShrinkSliverHeader(
 
 ---
 
+## Manual Examples — Full Control
+
+Sometimes you want complete control over every widget and animation. Here's how to build the same headers manually.
+
+### Manual Blinkit (Location Style)
+
+```dart
+class ManualBlinkitDemo extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          DynamicSliverHeader(
+            expandedHeight: 300,
+            collapsedHeight: 90,
+            pinned: true,
+
+            colors: const HeaderColorConfig(
+              expandedBackgroundColor: Color(0xFF8B6914),
+              collapsedBackgroundColor: Color(0xFF8B6914),
+            ),
+
+            layout: const HeaderLayoutConfig(
+              horizontalPadding: 16,
+              topPadding: 8,
+              bottomPadding: 8,
+              spacing: 8,
+              leadingWidth: 40,
+              trailingWidth: 40,
+              contentBelowBar: true,
+            ),
+
+            animation: const HeaderAnimationConfig(
+              curve: Curves.easeOutCubic,
+              enableFade: true,
+              enableScale: false,
+              enableSlide: false,
+              enableColorLerp: false,
+            ),
+
+            // Leading: location icon — always fixed
+            leading: HeaderSlot(
+              id: 'location_icon',
+              fixed: true,
+              child: Icon(Icons.location_on, color: Colors.white, size: 24.r),
+            ),
+
+            // Trailing: profile fixed, favourite fades
+            trailing: [
+              HeaderSlot(
+                id: 'profile',
+                fixed: true,
+                child: CircleAvatar(
+                  radius: 18.r,
+                  backgroundColor: Colors.white24,
+                  child: Icon(Icons.person_outline, color: Colors.white, size: 20.r),
+                ),
+              ),
+              const HeaderSlot(
+                id: 'favorite',
+                fixed: false,  // fades out on collapse
+                child: Icon(Icons.favorite_border, color: Colors.white),
+              ),
+            ],
+
+            // FlexibleSpace: search bar — pins in bar when collapsed
+            flexibleSpace: HeaderSlot(
+              id: 'search',
+              pinnedOnCollapse: true,
+              child: Container(
+                height: 44.h,
+                margin: EdgeInsets.symmetric(vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(22.r),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(width: 14.w),
+                    Icon(Icons.search, color: Colors.grey, size: 20.r),
+                    SizedBox(width: 8.w),
+                    Text('Search for food...',
+                        style: TextStyle(color: Colors.grey, fontSize: 14.sp)),
+                  ],
+                ),
+              ),
+            ),
+
+            // Content: delivery time + location + chips — fades out
+            content: HeaderSlot(
+              id: 'blinkit_content',
+              pinnedOnCollapse: false,
+              fadeOnCollapse: true,  // package fades this out
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 8.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Blinkit in',
+                        style: TextStyle(color: Colors.white70, fontSize: 13.sp)),
+                    Text('15 minutes',
+                        style: TextStyle(
+                            color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        Text('HOME',
+                            style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                        SizedBox(width: 4.w),
+                        Text('- Floor 2, Main Street',
+                            style: TextStyle(color: Colors.white70, fontSize: 13.sp)),
+                        Icon(Icons.arrow_drop_down, color: Colors.white, size: 20.r),
+                      ],
+                    ),
+                    SizedBox(height: 12.h),
+                    Container(
+                      height: 44.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22.r),
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(width: 14.w),
+                          Icon(Icons.search, color: Colors.grey, size: 20.r),
+                          SizedBox(width: 8.w),
+                          Text('Search for food...',
+                              style: TextStyle(color: Colors.grey, fontSize: 14.sp)),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 10.h),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _chip('Delivery', Colors.white24, Colors.white),
+                          SizedBox(width: 8.w),
+                          _chip('15 minutes', Colors.white24, Colors.white),
+                          SizedBox(width: 8.w),
+                          _chip('Free delivery', Colors.white24, Colors.white),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SliverList.builder(...),
+        ],
+      ),
+    );
+  }
+}
+```
+
+| You build: | Package does: |
+|---|---|
+| location icon | keeps it fixed in bar |
+| search bar widget | pins it in bar row on collapse |
+| delivery time text | fades it all out on collapse |
+| chips row | fades it all out on collapse |
+| profile avatar | keeps it fixed in bar |
+| fav icon | fades it out (fixed: false) |
+
+---
+
+### Manual Ralphs (Grocery Store Style)
+
+```dart
+class ManualRalphsDemo extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          DynamicSliverHeader(
+            expandedHeight: 280,
+            collapsedHeight: 90,
+            pinned: true,
+
+            colors: const HeaderColorConfig(
+              expandedBackgroundColor: Color(0xFFB71C1C),
+              collapsedBackgroundColor: Color(0xFFB71C1C),
+            ),
+
+            layout: const HeaderLayoutConfig(
+              horizontalPadding: 16,
+              topPadding: 8,
+              bottomPadding: 8,
+              spacing: 8,
+              leadingWidth: 48,
+              trailingWidth: 48,
+              contentBelowBar: true,
+            ),
+
+            animation: const HeaderAnimationConfig(
+              curve: Curves.easeOutCubic,
+              enableFade: true,
+              enableScale: true,
+              enableSlide: false,
+              enableColorLerp: false,
+            ),
+
+            // Leading: back button — always fixed
+            leading: HeaderSlot(
+              id: 'back',
+              fixed: true,
+              child: IconButton(
+                icon: Icon(Icons.arrow_back, color: Colors.white, size: 24.r),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+
+            // Trailing: cart — always fixed
+            trailing: [
+              HeaderSlot(
+                id: 'cart',
+                fixed: true,
+                child: IconButton(
+                  icon: Icon(Icons.shopping_cart, color: Colors.white, size: 24.r),
+                  onPressed: () {},
+                ),
+              ),
+            ],
+
+            // FlexibleSpace: search bar — pins in bar when collapsed
+            flexibleSpace: HeaderSlot(
+              id: 'search',
+              pinnedOnCollapse: true,
+              child: Container(
+                height: 44.h,
+                margin: EdgeInsets.symmetric(vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(22.r),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(width: 14.w),
+                    Icon(Icons.search, color: Colors.grey, size: 20.r),
+                    SizedBox(width: 8.w),
+                    Text('Search products...',
+                        style: TextStyle(color: Colors.grey, fontSize: 15.sp)),
+                  ],
+                ),
+              ),
+            ),
+
+            // Content: logo + title + promo — fades + scales out
+            content: HeaderSlot(
+              id: 'ralphs_content',
+              pinnedOnCollapse: false,
+              fadeOnCollapse: true,
+              scaleOnCollapse: true,
+              expandedScale: 1.0,
+              collapsedScale: 0.9,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 8.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 26.r,
+                          backgroundColor: Colors.white,
+                          child: Icon(Icons.store, size: 28.r, color: Color(0xFFB71C1C)),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Ralphs',
+                                  style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold, color: Colors.white)),
+                              Text('Fresh for Everyone',
+                                  style: TextStyle(fontSize: 13.sp, color: Colors.white70)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12.h),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.local_offer, color: Colors.white, size: 18.r),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: Text('Save up to 20% on your first order!',
+                                style: TextStyle(fontSize: 13.sp, color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 10.h),
+                    Container(
+                      height: 44.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22.r),
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(width: 14.w),
+                          Icon(Icons.search, color: Colors.grey, size: 20.r),
+                          SizedBox(width: 8.w),
+                          Text('Search products...',
+                              style: TextStyle(color: Colors.grey, fontSize: 15.sp)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SliverList.builder(...),
+        ],
+      ),
+    );
+  }
+}
+```
+
+| You build: | Package does: |
+|---|---|
+| back button | keeps it fixed |
+| cart button | keeps it fixed |
+| search bar widget | pins it in bar row on collapse |
+| logo + title | fades + scales out on collapse |
+| promo banner | fades + scales out on collapse |
+
+---
+
+### Manual Text Shrink
+
+```dart
+class ManualTextShrinkDemo extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          DynamicSliverHeader(
+            expandedHeight: 200,
+            collapsedHeight: 80,
+            pinned: true,
+
+            colors: const HeaderColorConfig(
+              expandedBackgroundColor: Color(0xFFCDDC39),
+              collapsedBackgroundColor: Color(0xFFCDDC39),
+            ),
+
+            layout: const HeaderLayoutConfig(
+              horizontalPadding: 16,
+              topPadding: 8,
+              bottomPadding: 8,
+              spacing: 8,
+              leadingWidth: 48,
+              trailingWidth: 48,
+              contentBelowBar: true,
+            ),
+
+            animation: const HeaderAnimationConfig(
+              curve: Curves.easeOutCubic,
+              enableFade: false,
+              enableScale: false,
+              enableSlide: false,
+              enableColorLerp: false,
+              enableTextShrink: true,
+              oneLineThreshold: 0.85,
+            ),
+
+            // Leading: back — always fixed
+            leading: HeaderSlot(
+              id: 'back',
+              fixed: true,
+              child: IconButton(
+                icon: Icon(Icons.arrow_back, color: Colors.white, size: 24.r),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+
+            // Trailing: share — always fixed
+            trailing: [
+              HeaderSlot(
+                id: 'share',
+                fixed: true,
+                child: IconButton(
+                  icon: Icon(Icons.share, color: Colors.white, size: 24.r),
+                  onPressed: () {},
+                ),
+              ),
+            ],
+
+            // Content: ShrinkingText title + description
+            content: HeaderSlot(
+              id: 'text_content',
+              pinnedOnCollapse: true,
+              child: Builder(
+                builder: (context) {
+                  final hp = HeaderProgress.of(context);
+                  final progress = hp.curvedProgress;
+
+                  return Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ShrinkingText(
+                          text: 'Some very long text that is multiline when expanded and one line when shrunken',
+                          progress: progress,
+                          config: const HeaderTextConfig(
+                            expandedFontSize: 28,
+                            collapsedFontSize: 20,
+                            expandedMaxLines: 3,
+                            collapsedMaxLines: 1,
+                            expandedFontWeight: FontWeight.bold,
+                            collapsedFontWeight: FontWeight.w600,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          animation: const HeaderAnimationConfig(
+                            enableTextShrink: true,
+                            oneLineThreshold: 0.85,
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        if (progress < 0.5) ...[
+                          SizedBox(height: 6.h),
+                          Opacity(
+                            opacity: (1.0 - progress * 2).clamp(0.0, 1.0),
+                            child: Text(
+                              'This subtitle fades out as the header collapses.',
+                              style: TextStyle(fontSize: 14.sp, color: Colors.white70),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          SliverList.builder(...),
+        ],
+      ),
+    );
+  }
+}
+```
+
+| You build: | Package does: |
+|---|---|
+| back + share buttons | keeps them fixed |
+| ShrinkingText(progress: hp...) | shrinks font + collapses lines |
+| description with Opacity(...) | you manually fade with progress |
+
+---
+
 ## Slot Behaviour — You Decide Everything
 
 The package handles animation. You decide what each widget does:
@@ -599,9 +1071,9 @@ Created with ❤️ for the Flutter community. Built on top of Flutter's `Sliver
 ```
 
 This README now includes:
-- ✅ Live progress example with `HeaderProgress.of(context)`
-- ✅ All 5 example tabs documented
-- ✅ Complete API reference tables
+- ✅ All 3 manual examples with clear "You build" vs "Package does" tables
+- ✅ Complete code for ManualBlinkitDemo, ManualRalphsDemo, and ManualTextShrinkDemo
+- ✅ Live progress examples with HeaderProgress
+- ✅ All API reference tables
 - ✅ Screenutil scaling reference
-- ✅ Preset behaviour descriptions
-- ✅ Installation and quick start guides
+- ✅ Complete example app documentation
