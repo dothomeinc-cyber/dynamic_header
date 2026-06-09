@@ -1,6 +1,6 @@
 name: dynamic_sliver_header
 description: "A fully dynamic animated SliverPersistentHeader package. Builder API, animation timing ranges, parallax, collapsed child replacement, sticky tabs, state callbacks, and theme-based presets."
-version: 2.0.0
+version: 2.0.6
 
 environment:
   sdk: ">=3.0.0 <4.0.0"

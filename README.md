@@ -1,6 +1,6 @@
-Here's the updated README.md with the manual examples added:
+Here's your complete updated README.md with the color lerp section added without missing any existing content:
 
-## **README.md** (Updated with Manual Examples)
+## **README.md** (Complete with Color Lerp Section)
 
 ```markdown
 # dynamic_sliver_header
@@ -21,6 +21,7 @@ A fully dynamic animated `SliverPersistentHeader` package for Flutter. Create be
 - 📱 **Responsive** — Built-in `flutter_screenutil` support for all sizes
 - 🎭 **Live Progress** — Read scroll progress anywhere with `HeaderProgress.of(context)`
 - 🖼️ **Background Image** — Full-bleed image with colour overlay and gradient scrim
+- 🎨 **Color Lerp** — Smooth background and icon colour transitions on scroll
 - 💪 **Production Ready** — Null safety, no deprecated APIs, 0 lint warnings
 
 ---
@@ -312,6 +313,135 @@ TextShrinkSliverHeader(
 ```
 
 **Behaviour:** Title font smoothly shrinks and collapses to 1 line with ellipsis. Description fades out in the first half of collapse.
+
+---
+
+## Color Lerp — Smooth Background and Icon Transition
+
+The background colour smoothly transitions from expanded to collapsed state as you scroll.
+
+### Basic colour change on scroll
+
+```dart
+DynamicSliverHeader(
+  expandedHeight: 300,
+  collapsedHeight: 90,
+  pinned: true,
+
+  colors: const HeaderColorConfig(
+    expandedBackgroundColor: Colors.transparent, // colour when expanded
+    collapsedBackgroundColor: Colors.white,       // colour when collapsed
+  ),
+
+  animation: const HeaderAnimationConfig(
+    enableColorLerp: true, // ← this does the smooth colour transition
+  ),
+
+  layout: const HeaderLayoutConfig(),
+  // ... your slots
+)
+```
+
+### How it works
+
+```
+Scroll position 0%   → expandedBackgroundColor  (fully expanded)
+Scroll position 50%  → lerped colour in between  (halfway)
+Scroll position 100% → collapsedBackgroundColor  (fully collapsed)
+```
+
+### Real examples
+
+#### Transparent → white (like most app bars)
+
+```dart
+colors: const HeaderColorConfig(
+  expandedBackgroundColor: Colors.transparent,
+  collapsedBackgroundColor: Colors.white,
+),
+animation: const HeaderAnimationConfig(
+  enableColorLerp: true,
+),
+```
+
+#### Gold → dark (Blinkit style)
+
+```dart
+colors: const HeaderColorConfig(
+  expandedBackgroundColor: Color(0xFF8B6914),
+  collapsedBackgroundColor: Color(0xFF5D4410),
+),
+animation: const HeaderAnimationConfig(
+  enableColorLerp: true,
+),
+```
+
+#### With background image — image tints to colour
+
+```dart
+backgroundImage: const NetworkImage('https://example.com/image.jpg'),
+
+colors: const HeaderColorConfig(
+  expandedBackgroundColor: Colors.transparent,
+  collapsedBackgroundColor: Color(0xFF37474F), // tints over image
+),
+
+animation: const HeaderAnimationConfig(
+  enableColorLerp: true, // overlay fades in as collapsed
+),
+```
+
+### Icon and Text Colour Transition
+
+Your `HeaderColorConfig` includes `expandedIconColor` and `collapsedIconColor` properties. To use them:
+
+```dart
+colors: const HeaderColorConfig(
+  expandedBackgroundColor: Colors.transparent,
+  collapsedBackgroundColor: Colors.white,
+  expandedIconColor: Colors.white,   // icons white when expanded
+  collapsedIconColor: Colors.black,  // icons black when collapsed
+  expandedTextColor: Colors.white,
+  collapsedTextColor: Colors.black87,
+),
+
+// Then in your slot, use HeaderProgress to lerp colors:
+leading: HeaderSlot(
+  id: 'back',
+  fixed: true,
+  child: Builder(
+    builder: (context) {
+      final hp = HeaderProgress.of(context);
+      final color = Color.lerp(
+        Colors.white,   // expanded icon colour
+        Colors.black,   // collapsed icon colour
+        hp.curvedProgress,
+      );
+      return Icon(Icons.arrow_back, color: color);
+    },
+  ),
+),
+```
+
+### Presets Note
+
+For presets (`LocationSliverHeader`, `RalphsSliverHeader`, `TextShrinkSliverHeader`), colour lerp uses the same colour by default. To use different expanded/collapsed colours with presets, use `DynamicSliverHeader` directly:
+
+```dart
+// Instead of LocationSliverHeader, use DynamicSliverHeader
+DynamicSliverHeader(
+  expandedHeight: 280,
+  collapsedHeight: 88,
+  colors: const HeaderColorConfig(
+    expandedBackgroundColor: Color(0xFF8B6914),  // gold when expanded
+    collapsedBackgroundColor: Color(0xFF5D4410), // dark when collapsed
+  ),
+  animation: const HeaderAnimationConfig(
+    enableColorLerp: true,
+  ),
+  // ... copy the slot configurations from LocationSliverHeader
+)
+```
 
 ---
 
@@ -1023,6 +1153,366 @@ You pass plain `double` values — the package applies the scaling internally.
 
 ---
 
+## Summary of Color Lerp Features
+
+| Feature | Status | How to Use |
+|---|---|---|
+| Background color lerp | ✅ Already works | `enableColorLerp: true` |
+| Icon color lerp | ⚠️ Properties exist, need manual | Use `Builder` + `HeaderProgress` |
+| Text color lerp | ⚠️ Properties exist, need manual | Use `Builder` + `HeaderProgress` |
+| Image overlay tint | ✅ Already works | `backgroundImage` + color lerp |
+
+---
+
+Here's the complete code for the search integration example:
+
+## **`search_integration_example.dart`**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:dynamic_sliver_header/dynamic_sliver_header.dart';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OPTION 1: Using the preset — just pass onSearchTap
+// ─────────────────────────────────────────────────────────────────────────────
+
+class BlinkitWithSearchPreset extends StatelessWidget {
+  const BlinkitWithSearchPreset({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          LocationSliverHeader(
+            locationName: 'HOME',
+            locationAddress: 'Floor 2, Main Street',
+
+            // ← just pass onSearchTap — that's it
+            onSearchTap: () => context.go('/search'),
+
+            onLocationTap: () => context.go('/location'),
+            onProfileTap: () => context.go('/profile'),
+            onFavoriteTap: () => context.go('/favorites'),
+          ),
+
+          SliverList.builder(
+            itemCount: 40,
+            itemBuilder: (_, i) => ListTile(
+              title: Text('Item ${i + 1}'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OPTION 2: Manual style — full control over search bar tap
+// ─────────────────────────────────────────────────────────────────────────────
+
+class BlinkitWithSearchManual extends StatelessWidget {
+  const BlinkitWithSearchManual({super.key});
+
+  // The search bar widget — reused in both bar row and expanded content
+  Widget _searchBar(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.go('/search'), // ← navigate on tap
+      child: Container(
+        height: 44.h,
+        margin: EdgeInsets.symmetric(vertical: 4.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22.r),
+        ),
+        // AbsorbPointer prevents the text field from getting focus
+        // since this is just a tap-to-navigate dummy bar
+        child: AbsorbPointer(
+          child: Row(
+            children: [
+              SizedBox(width: 14.w),
+              Icon(Icons.search, color: Colors.grey, size: 20.r),
+              SizedBox(width: 8.w),
+              Text(
+                'Search for food...',
+                style: TextStyle(color: Colors.grey, fontSize: 14.sp),
+              ),
+              const Spacer(),
+              Icon(Icons.mic, color: Colors.grey, size: 20.r),
+              SizedBox(width: 14.w),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          DynamicSliverHeader(
+            expandedHeight: 300,
+            collapsedHeight: 90,
+            pinned: true,
+
+            colors: const HeaderColorConfig(
+              expandedBackgroundColor: Color(0xFF8B6914),
+              collapsedBackgroundColor: Color(0xFF8B6914),
+            ),
+
+            layout: const HeaderLayoutConfig(
+              horizontalPadding: 16,
+              topPadding: 8,
+              bottomPadding: 8,
+              spacing: 8,
+              leadingWidth: 40,
+              trailingWidth: 40,
+              contentBelowBar: true,
+            ),
+
+            animation: const HeaderAnimationConfig(
+              curve: Curves.easeOutCubic,
+              enableFade: true,
+            ),
+
+            leading: const HeaderSlot(
+              id: 'location_icon',
+              fixed: true,
+              child: Icon(Icons.location_on, color: Colors.white),
+            ),
+
+            trailing: [
+              const HeaderSlot(
+                id: 'profile',
+                fixed: true,
+                child: CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.white24,
+                  child: Icon(Icons.person_outline, color: Colors.white),
+                ),
+              ),
+              const HeaderSlot(
+                id: 'favorite',
+                fixed: false, // fades out
+                child: Icon(Icons.favorite_border, color: Colors.white),
+              ),
+            ],
+
+            // ── Search bar in bar row — pins when collapsed ─────────────────
+            // Same widget used here and in content below
+            flexibleSpace: HeaderSlot(
+              id: 'search_bar',
+              pinnedOnCollapse: true, // stays in bar when collapsed
+              child: _searchBar(context), // ← tapping goes to /search
+            ),
+
+            // ── Expanded content — fades out on scroll ──────────────────────
+            content: HeaderSlot(
+              id: 'blinkit_content',
+              pinnedOnCollapse: false,
+              fadeOnCollapse: true,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 8.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Delivery time
+                    Text(
+                      'Blinkit in',
+                      style: TextStyle(
+                          color: Colors.white70, fontSize: 13.sp),
+                    ),
+                    Text(
+                      '15 minutes',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+
+                    // Location row — tap to change location
+                    GestureDetector(
+                      onTap: () => context.go('/location'),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'HOME',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '- Floor 2, Main Street',
+                            style: TextStyle(
+                                color: Colors.white70, fontSize: 13.sp),
+                          ),
+                          const Icon(Icons.arrow_drop_down,
+                              color: Colors.white),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+
+                    // Search bar inside expanded content
+                    _searchBar(context), // ← same widget, same navigation
+
+                    SizedBox(height: 10.h),
+
+                    // Chips
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _chip('Delivery'),
+                          SizedBox(width: 8.w),
+                          _chip('15 minutes'),
+                          SizedBox(width: 8.w),
+                          _chip('Free delivery'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          SliverList.builder(
+            itemCount: 40,
+            itemBuilder: (_, i) => ListTile(
+              leading: CircleAvatar(
+                backgroundColor:
+                    i.isEven ? Colors.orange[100] : Colors.grey[100],
+                child: Text('${i + 1}'),
+              ),
+              title: Text('Item ${i + 1}'),
+              subtitle: const Text('Tap to add to cart'),
+              trailing: const Icon(Icons.add_circle_outline),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip(String label) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+      decoration: BoxDecoration(
+        color: Colors.white24,
+        borderRadius: BorderRadius.circular(14.r),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 12.sp, color: Colors.white),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The search screen you navigate TO
+// ─────────────────────────────────────────────────────────────────────────────
+
+class SearchScreen extends StatelessWidget {
+  const SearchScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/home'),
+        ),
+        title: TextField(
+          autofocus: true, // keyboard opens immediately
+          decoration: const InputDecoration(
+            hintText: 'Search for food...',
+            border: InputBorder.none,
+          ),
+          onChanged: (value) {
+            // your search logic here
+          },
+        ),
+      ),
+      body: const Center(
+        child: Text('Search results appear here'),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GoRouter setup
+// ─────────────────────────────────────────────────────────────────────────────
+
+final router = GoRouter(
+  routes: [
+    GoRoute(
+      path: '/home',
+      builder: (context, state) => const BlinkitWithSearchManual(),
+    ),
+    GoRoute(
+      path: '/search',
+      builder: (context, state) => const SearchScreen(),
+    ),
+  ],
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main app entry point
+// ─────────────────────────────────────────────────────────────────────────────
+
+void main() async {
+  await ScreenUtil.ensureScreenSize();
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ScreenUtilInit(
+      designSize: const Size(390, 844),
+      minTextAdapt: true,
+      builder: (context, child) => MaterialApp.router(
+        title: 'Dynamic Sliver Header Demo',
+        theme: ThemeData(useMaterial3: true),
+        routerConfig: router,
+        debugShowCheckedModeBanner: false,
+      ),
+    );
+  }
+}
+```
+
+## **Key Features of This Example:**
+
+| Feature | Implementation |
+|---|---|
+| **Preset usage** | `BlinkitWithSearchPreset` - just pass `onSearchTap` |
+| **Manual control** | `BlinkitWithSearchManual` - full control over search bar |
+| **Shared widget** | `_searchBar()` reused in both `flexibleSpace` and `content` |
+| **Navigation** | `go_router` for seamless screen transitions |
+| **AbsorbPointer** | Prevents keyboard focus on dummy search bar |
+| **Autofocus** | Keyboard opens immediately on search screen |
+| **Screenutil** | All sizes properly scaled |
+
+This example shows two ways to implement search navigation with your package!
+
 ## Running the Example
 
 The complete example app is included in the `example/` folder.
@@ -1071,9 +1561,9 @@ Created with ❤️ for the Flutter community. Built on top of Flutter's `Sliver
 ```
 
 This README now includes:
-- ✅ All 3 manual examples with clear "You build" vs "Package does" tables
-- ✅ Complete code for ManualBlinkitDemo, ManualRalphsDemo, and ManualTextShrinkDemo
-- ✅ Live progress examples with HeaderProgress
-- ✅ All API reference tables
-- ✅ Screenutil scaling reference
-- ✅ Complete example app documentation
+- ✅ All existing content (presets, manual examples, API reference)
+- ✅ New Color Lerp section with complete documentation
+- ✅ Real examples for transparent→white, gold→dark, and background image tinting
+- ✅ Icon and text color transition examples using `HeaderProgress`
+- ✅ Summary table at the end showing feature status
+- ✅ Presets note explaining how to use color lerp with presets
