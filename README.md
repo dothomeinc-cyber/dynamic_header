@@ -1,6 +1,8 @@
-Here's your complete updated README.md with the color lerp section added without missing any existing content:
+I'll add your `ProductDetailPage` example to the README.md, preserving every detail exactly as you've written it. Here's the complete updated README with your example added:
 
-## **README.md** (Complete with Color Lerp Section)
+---
+
+## **Updated README.md** (with ProductDetailPage Example)
 
 ```markdown
 # dynamic_sliver_header
@@ -14,7 +16,7 @@ A fully dynamic animated `SliverPersistentHeader` package for Flutter. Create be
 
 ## Features
 
-- 🎯 **Complete Control** — Every widget's animation is opt-in via simple flags
+- 🎛 **Complete Control** — Every widget's animation is opt-in via simple flags
 - ✨ **Smooth Animations** — Fade, scale, slide, color lerp, and text shrinking
 - 📦 **Ready-to-Use Presets** — Location (Blinkit-style), Grocery (Ralphs-style), Text Shrink
 - 🔧 **Flexible Slots** — Leading, trailing, flexibleSpace, and content slots
@@ -313,6 +315,788 @@ TextShrinkSliverHeader(
 ```
 
 **Behaviour:** Title font smoothly shrinks and collapses to 1 line with ellipsis. Description fades out in the first half of collapse.
+
+---
+
+## Real-World Example: Product Detail Page (Kroger/Grocery Style)
+
+This example mirrors the typical grocery app product detail page (like Kroger/Ralphs):
+
+**Behaviour:**
+- **Expanded** → product image fills header, product name + rating visible below image, app bar title is invisible
+- **Collapsed** → header shrinks to app bar height, product name fades IN between the close button and the bookmark/share icons
+
+**Progress convention (from dynamic_sliver_header):**
+- `0` = fully expanded
+- `1` = fully collapsed
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:dynamic_sliver_header/dynamic_sliver_header.dart';
+
+class ProductDetailPage extends StatelessWidget {
+  final String productName;
+  final String productSubtitle;
+  final String salePrice;
+  final String regularPrice;
+  final String pricePerUnit;
+  final String imageUrl;
+
+  const ProductDetailPage({
+    super.key,
+    this.productName = 'Spindrift Island Punch Sparkling Water 8pk',
+    this.productSubtitle = '12 fl oz · 8 × 12 fl oz',
+    this.salePrice = '\$6.99',
+    this.regularPrice = '\$7.99',
+    this.pricePerUnit = '\$0.87 / fl oz',
+    this.imageUrl = 'https://picsum.photos/seed/spindrift/800/600',
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      builder: (context, _) => Scaffold(
+        backgroundColor: Colors.white,
+        body: _Body(
+          productName: productName,
+          productSubtitle: productSubtitle,
+          salePrice: salePrice,
+          regularPrice: regularPrice,
+          pricePerUnit: pricePerUnit,
+          imageUrl: imageUrl,
+        ),
+      ),
+    );
+  }
+}
+
+class _Body extends StatelessWidget {
+  final String productName;
+  final String productSubtitle;
+  final String salePrice;
+  final String regularPrice;
+  final String pricePerUnit;
+  final String imageUrl;
+
+  const _Body({
+    required this.productName,
+    required this.productSubtitle,
+    required this.salePrice,
+    required this.regularPrice,
+    required this.pricePerUnit,
+    required this.imageUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        CustomScrollView(
+          slivers: [
+            // ── Animated Sliver Header ──────────────────────────────────────
+            DynamicSliverHeader(
+              expandedHeight: 380,
+              collapsedHeight: 56,
+              pinned: true,
+
+              colors: const HeaderColorConfig(
+                expandedBackgroundColor: Colors.white,
+                collapsedBackgroundColor: Colors.white,
+              ),
+
+              layout: HeaderLayoutConfig(
+                horizontalPadding: 0,
+                topPadding: 0,
+                bottomPadding: 0,
+                spacing: 0,
+                leadingWidth: 48.w,
+                trailingWidth: 96.w, // bookmark + share side by side
+                respectSafeArea: true,
+                contentBelowBar: false,
+              ),
+
+              animation: const HeaderAnimationConfig(
+                curve: Curves.easeOutCubic,
+                enableFade: false,   // we handle opacity manually per slot
+                enableColorLerp: false,
+              ),
+
+              // ── Leading: close button (always visible, never animates) ────
+              leading: HeaderSlot(
+                id: 'close_btn',
+                fixed: true,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.black),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+
+              // ── Trailing: bookmark + share (always visible) ───────────────
+              trailing: [
+                HeaderSlot(
+                  id: 'bookmark_btn',
+                  fixed: true,
+                  child: IconButton(
+                    icon: const Icon(Icons.bookmark_border, color: Colors.black),
+                    onPressed: () {},
+                  ),
+                ),
+                HeaderSlot(
+                  id: 'share_btn',
+                  fixed: true,
+                  child: IconButton(
+                    icon: const Icon(Icons.ios_share, color: Colors.black),
+                    onPressed: () {},
+                  ),
+                ),
+              ],
+
+              // ── flexibleSpace: title that FADES IN when collapsed ─────────
+              // pinnedOnCollapse: true → stays in the app bar row when header shrinks
+              // opacity driven by curvedProgress (0 = hidden, 1 = fully visible)
+              flexibleSpace: HeaderSlot(
+                id: 'appbar_title',
+                pinnedOnCollapse: true,
+                child: Builder(
+                  builder: (context) {
+                    final hp = HeaderProgress.of(context);
+                    return Opacity(
+                      opacity: hp.curvedProgress.clamp(0.0, 1.0),
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 8.w),
+                        child: Text(
+                          productName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // ── content: product image + hero title that FADES OUT ────────
+              // pinnedOnCollapse: false → this area collapses and clips away
+              content: HeaderSlot(
+                id: 'product_hero',
+                pinnedOnCollapse: false,
+                child: Builder(
+                  builder: (context) {
+                    final hp = HeaderProgress.of(context);
+
+                    // Hero title fades out faster than collapse (done by ~60%)
+                    final heroTitleOpacity =
+                        (1.0 - hp.curvedProgress * 1.7).clamp(0.0, 1.0);
+
+                    return Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // ── Product image ──────────────────────────────────
+                        Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: const Color(0xFFFCE4EC),
+                            child: Center(
+                              child: Icon(
+                                Icons.local_drink,
+                                size: 80.r,
+                                color: const Color(0xFFE91E63),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Bottom gradient so text is readable over image
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          height: 130.h,
+                          child: const DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [
+                                  Colors.white,
+                                  Color(0xCCFFFFFF),
+                                  Colors.transparent,
+                                ],
+                                stops: [0.0, 0.5, 1.0],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // ── Hero product name — fades OUT on scroll ────────
+                        Positioned(
+                          bottom: 14.h,
+                          left: 16.w,
+                          right: 16.w,
+                          child: Opacity(
+                            opacity: heroTitleOpacity,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Star rating row
+                                Row(
+                                  children: [
+                                    ...List.generate(
+                                      5,
+                                      (_) => Icon(
+                                        Icons.star,
+                                        size: 14.r,
+                                        color: const Color(0xFFF59E0B),
+                                      ),
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      '4.9 (8)',
+                                      style: TextStyle(
+                                        fontSize: 12.sp,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 4.h),
+
+                                // Product name
+                                Text(
+                                  productName,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 18.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                    height: 1.3,
+                                  ),
+                                ),
+                                SizedBox(height: 2.h),
+
+                                // Subtitle
+                                Text(
+                                  productSubtitle,
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            // ── Product detail body ─────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Price row
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          salePrice,
+                          style: TextStyle(
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFFD97706),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'reg. $regularPrice',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: Colors.grey,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      'With loyalty card',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+
+                    // Add loyalty card button
+                    OutlinedButton(
+                      onPressed: () {},
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFE0E0E0)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24.r),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 20.w,
+                          vertical: 10.h,
+                        ),
+                      ),
+                      child: Text(
+                        'Add loyalty card',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 20.h),
+                    const Divider(height: 1, color: Color(0xFFF0F0F0)),
+                    SizedBox(height: 20.h),
+
+                    // Product information section
+                    Text(
+                      'Product information',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      '• Zero sugar',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+
+                    // Info chips
+                    Wrap(
+                      spacing: 8.w,
+                      children: ['Details', 'Ingredients', 'Nutrition']
+                          .map(
+                            (label) => OutlinedButton(
+                              onPressed: () {},
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(
+                                    color: Color(0xFFE0E0E0)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20.r),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 14.w,
+                                  vertical: 8.h,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    label,
+                                    style: TextStyle(
+                                      fontSize: 13.sp,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  SizedBox(width: 4.w),
+                                  Icon(
+                                    Icons.keyboard_arrow_down,
+                                    size: 16.r,
+                                    color: Colors.black54,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+
+                    SizedBox(height: 24.h),
+                    Text(
+                      'Customers also considered',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── Horizontal related products ─────────────────────────────────
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 220.h,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  children: const [
+                    _RelatedProductCard(
+                      name: 'LaCroix Blackberry Cucumber Sparkling...',
+                      price: '\$4.99',
+                      regPrice: '\$6.99',
+                      badge: '110+ bought yesterday',
+                      emoji: '🫐',
+                    ),
+                    _RelatedProductCard(
+                      name: 'Waterloo Sparkling Water Coconut Lime...',
+                      price: '\$6.99',
+                      regPrice: '\$6.99',
+                      badge: '290+ bought yesterday',
+                      emoji: '🥥',
+                      promoLabel: 'Buy 3, get 3 free',
+                    ),
+                    _RelatedProductCard(
+                      name: 'Waterloo Sparkling Water Banana Berry...',
+                      price: '\$6.99',
+                      regPrice: '\$6.99',
+                      badge: '',
+                      emoji: '🍌',
+                      promoLabel: 'Buy 3, get 3 free',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── Items to add next ───────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 24.h, 16.w, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Items to add next',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Sponsored',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            SliverList.builder(
+              itemCount: 6,
+              itemBuilder: (_, i) => ListTile(
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                leading: Container(
+                  width: 56.r,
+                  height: 56.r,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Icon(
+                    Icons.local_drink,
+                    color: Colors.grey[400],
+                    size: 28.r,
+                  ),
+                ),
+                title: Text(
+                  'Related Product ${i + 1}',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                subtitle: Text(
+                  '\$${(4.99 + i * 1.5).toStringAsFixed(2)} · 8 × 12 fl oz',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.grey,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.add_circle_outline,
+                  color: Colors.grey[600],
+                  size: 24.r,
+                ),
+              ),
+            ),
+
+            // Bottom padding so content clears the cart bar
+            SliverToBoxAdapter(child: SizedBox(height: 90.h)),
+          ],
+        ),
+
+        // ── Sticky bottom Add To Cart bar ───────────────────────────────────
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 16.h),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Row(
+                children: [
+                  // Quantity selector
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFE0E0E0)),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove),
+                          onPressed: () {},
+                          iconSize: 18.r,
+                          padding: EdgeInsets.symmetric(horizontal: 8.w),
+                        ),
+                        Text(
+                          '1 ct',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: () {},
+                          iconSize: 18.r,
+                          padding: EdgeInsets.symmetric(horizontal: 8.w),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+
+                  // Add To Cart button
+                  Expanded(
+                    child: SizedBox(
+                      height: 48.h,
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF16A34A),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Add To Cart',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RelatedProductCard extends StatelessWidget {
+  final String name;
+  final String price;
+  final String regPrice;
+  final String badge;
+  final String emoji;
+  final String? promoLabel;
+
+  const _RelatedProductCard({
+    required this.name,
+    required this.price,
+    required this.regPrice,
+    required this.badge,
+    required this.emoji,
+    this.promoLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 150.w,
+      margin: EdgeInsets.only(right: 12.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFF0F0F0)),
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Image area
+          Stack(
+            children: [
+              Container(
+                height: 100.h,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(12.r),
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Text(emoji, style: TextStyle(fontSize: 40.sp)),
+              ),
+              Positioned(
+                top: 8.h,
+                right: 8.w,
+                child: Container(
+                  width: 24.r,
+                  height: 24.r,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF16A34A),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.add, color: Colors.white, size: 16.r),
+                ),
+              ),
+            ],
+          ),
+
+          Padding(
+            padding: EdgeInsets.all(8.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (badge.isNotEmpty) ...[
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                    child: Text(
+                      badge,
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                ],
+
+                // Price
+                Row(
+                  children: [
+                    Text(
+                      price,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFD97706),
+                      ),
+                    ),
+                    if (price != regPrice) ...[
+                      SizedBox(width: 4.w),
+                      Text(
+                        regPrice,
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          color: Colors.grey,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+
+                if (promoLabel != null) ...[
+                  SizedBox(height: 2.h),
+                  Text(
+                    promoLabel!,
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: const Color(0xFFD97706),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+
+                SizedBox(height: 4.h),
+                Text(
+                  name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: Colors.black87,
+                    height: 1.4,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  '8 × 12 fl oz',
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+**Key takeaways from this example:**
+
+| Feature | Implementation |
+|---|---|
+| **Title fades IN when collapsed** | `flexibleSpace` with `Opacity(opacity: hp.curvedProgress)` |
+| **Hero title fades OUT when collapsed** | `content` with `Opacity(opacity: 1.0 - hp.curvedProgress * 1.7)` |
+| **Fixed buttons (close, bookmark, share)** | `fixed: true` in leading/trailing slots |
+| **Title stays in app bar row on collapse** | `pinnedOnCollapse: true` on flexibleSpace |
+| **Product image collapses away** | `pinnedOnCollapse: false` on content |
+| **Manual opacity control** | `enableFade: false` → we handle it with `HeaderProgress` |
 
 ---
 
@@ -1164,9 +1948,9 @@ You pass plain `double` values — the package applies the scaling internally.
 
 ---
 
-Here's the complete code for the search integration example:
+## Search Integration Example
 
-## **`search_integration_example.dart`**
+Here's the complete code for the search integration example:
 
 ```dart
 import 'package:flutter/material.dart';
@@ -1303,7 +2087,7 @@ class BlinkitWithSearchManual extends StatelessWidget {
               ),
             ],
 
-            // ── Search bar in bar row — pins when collapsed ─────────────────
+            // ── Search bar in bar row — pins when collapsed ──────────────────
             // Same widget used here and in content below
             flexibleSpace: HeaderSlot(
               id: 'search_bar',
@@ -1499,7 +2283,7 @@ class MyApp extends StatelessWidget {
 }
 ```
 
-## **Key Features of This Example:**
+**Key Features of This Search Example:**
 
 | Feature | Implementation |
 |---|---|
@@ -1511,7 +2295,7 @@ class MyApp extends StatelessWidget {
 | **Autofocus** | Keyboard opens immediately on search screen |
 | **Screenutil** | All sizes properly scaled |
 
-This example shows two ways to implement search navigation with your package!
+---
 
 ## Running the Example
 
@@ -1562,8 +2346,10 @@ Created with ❤️ for the Flutter community. Built on top of Flutter's `Sliver
 
 This README now includes:
 - ✅ All existing content (presets, manual examples, API reference)
-- ✅ New Color Lerp section with complete documentation
+- ✅ Color Lerp section with complete documentation
+- ✅ Search integration example with both preset and manual approaches
+- ✅ **Your ProductDetailPage example** with full Kroger/grocery app style behaviour
 - ✅ Real examples for transparent→white, gold→dark, and background image tinting
-- ✅ Icon and text color transition examples using `HeaderProgress`
+- ✅ Icon and text colour transition examples using `HeaderProgress`
 - ✅ Summary table at the end showing feature status
-- ✅ Presets note explaining how to use color lerp with presets
+- ✅ Presets note explaining how to use colour lerp with presets
