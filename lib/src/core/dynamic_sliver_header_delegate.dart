@@ -50,8 +50,42 @@ class DynamicSliverHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   double get minExtent => collapsedHeight;
 
+  // `HeaderSlot.==` intentionally ignores `child` (see header_slot.dart),
+  // so it alone can't tell us whether a slot's *content* changed — only
+  // whether its animation/layout flags did. We additionally compare
+  // `child` by identity here: cheap, and correct in the common case where
+  // callers hold widgets in `const` fields or otherwise return the same
+  // instance across rebuilds when nothing changed. If a caller rebuilds a
+  // brand-new (but visually identical) widget tree every time, this will
+  // over-trigger rebuilds — the safe direction to err in.
+  bool _slotChanged(HeaderSlot? a, HeaderSlot? b) {
+    if (a == null && b == null) return false;
+    if (a == null || b == null) return true;
+    return a != b || !identical(a.child, b.child);
+  }
+
   @override
-  bool shouldRebuild(covariant DynamicSliverHeaderDelegate old) => true;
+  bool shouldRebuild(covariant DynamicSliverHeaderDelegate old) {
+    return expandedHeight != old.expandedHeight ||
+        collapsedHeight != old.collapsedHeight ||
+        _slotChanged(leading, old.leading) ||
+        trailing.length != old.trailing.length ||
+        _trailingChanged(trailing, old.trailing) ||
+        _slotChanged(flexibleSpace, old.flexibleSpace) ||
+        _slotChanged(content, old.content) ||
+        colors != old.colors ||
+        layout != old.layout ||
+        animation != old.animation ||
+        scrollConfig != old.scrollConfig ||
+        backgroundImage != old.backgroundImage;
+  }
+
+  bool _trailingChanged(List<HeaderSlot> a, List<HeaderSlot> b) {
+    for (var i = 0; i < a.length; i++) {
+      if (_slotChanged(a[i], b[i])) return true;
+    }
+    return false;
+  }
 
   @override
   Widget build(
@@ -65,12 +99,13 @@ class DynamicSliverHeaderDelegate extends SliverPersistentHeaderDelegate {
       minExtent,
     );
     final curvedProgress = animation.curve.transform(rawProgress);
-    final currentH = ScrollMath.currentHeight(shrinkOffset, maxExtent);
+    final currentH = ScrollMath.currentHeight(shrinkOffset, maxExtent, minExtent);
 
     // Bar row height — 48 scaled with screenutil
     final barRowHeight = layout.topPadding.h + layout.bottomPadding.h + 48.r;
 
     final flexPinned = flexibleSpace?.pinnedOnCollapse ?? false;
+    final contentPinned = content?.pinnedOnCollapse ?? false;
 
     final flexInBarOpacity = animation.enableFade
         ? LerpUtils.rangeMap(curvedProgress, inStart: 0.6, inEnd: 1.0)
@@ -80,8 +115,22 @@ class DynamicSliverHeaderDelegate extends SliverPersistentHeaderDelegate {
         ? LerpUtils.rangeMapInverted(curvedProgress, inStart: 0.0, inEnd: 0.5)
         : 1.0;
 
-    final contentTop = layout.contentBelowBar ? barRowHeight : 0.0;
-    final contentHeight = (currentH - contentTop).clamp(0.0, maxExtent);
+    // When `content.pinnedOnCollapse` is true, the slot is anchored at the
+    // top of the header (like the bar row) instead of sitting in a gap
+    // below it, and always sized to the header's full *current* height
+    // (`currentH`) rather than the constant bar-row band. This gives it
+    // room to render its expanded, multi-line presentation while the
+    // header is open, and still keeps it from being squeezed into a
+    // near-zero gap as the header nears `collapsedHeight` — a pinned
+    // slot's own animation (e.g. `ShrinkingText`) is what actually
+    // produces the compact "lives alongside the bar row" look once
+    // collapsed, not a shrinking layout box.
+    final contentTop = layout.contentBelowBar && !contentPinned
+        ? barRowHeight
+        : 0.0;
+    final contentHeight = contentPinned
+        ? currentH.clamp(0.0, maxExtent)
+        : (currentH - contentTop).clamp(0.0, maxExtent);
 
     return HeaderProgress(
       progress: rawProgress,
@@ -105,7 +154,7 @@ class DynamicSliverHeaderDelegate extends SliverPersistentHeaderDelegate {
             // Layer 2: Content slot
             if (content != null && contentHeight > 0)
               Positioned(
-                top: contentTop,
+                top: contentPinned ? 0 : contentTop,
                 left: 0,
                 right: 0,
                 height: contentHeight,

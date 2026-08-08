@@ -74,7 +74,21 @@ class AnimatedHeaderSlot extends StatelessWidget {
     );
 
     // ── Compose transforms ─────────────────────────────────────────────────
-    Widget child = Padding(padding: slot.padding, child: slot.child);
+    // `Align` gives its child *loose* (unbounded) constraints sized to the
+    // child's own natural size -- it does not clip or constrain width. A
+    // Column/Text inside with maxLines+overflow.ellipsis relies on being
+    // given a *bounded* width to have anything to ellipsize against;
+    // without SizedBox.expand here, long single-line content instead lays
+    // out at its full natural (possibly very wide) intrinsic width,
+    // centers on top of/past the visible header, and gets silently
+    // clipped away by the delegate's outer ClipRect -- invisible, but
+    // still present in the tree in a way that reads as "vanished" rather
+    // than "overflowed". Wrapping in SizedBox.expand forces the child to
+    // fill the width Positioned actually gave this slot, so maxLines and
+    // TextOverflow.ellipsis have a real boundary to truncate against.
+    Widget child = SizedBox.expand(
+      child: Padding(padding: slot.padding, child: slot.child),
+    );
 
     if (slot.scaleOnCollapse && animation.enableScale) {
       child = Transform.scale(scale: scale.clamp(0.0, 2.0), child: child);

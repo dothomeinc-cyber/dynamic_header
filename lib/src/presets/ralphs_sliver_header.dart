@@ -141,10 +141,17 @@ class RalphsSliverHeader extends StatelessWidget {
                 SizedBox(width: 14.w),
                 Icon(Icons.search, color: searchIconColor, size: 20.r),
                 SizedBox(width: 8.w),
-                Text(searchHint,
+                Expanded(
+                  child: Text(
+                    searchHint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         color: searchHintColor,
-                        fontSize: searchHintFontSize.sp)),
+                        fontSize: searchHintFontSize.sp),
+                  ),
+                ),
+                SizedBox(width: 14.w),
               ],
             ),
           ),
@@ -159,79 +166,108 @@ class RalphsSliverHeader extends StatelessWidget {
         collapsedScale: 0.9,
         child: Padding(
           padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 8.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 26.r,
-                    backgroundColor: storeAvatarColor,
-                    child: Icon(Icons.store, size: 28.r, color: storeIconColor),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(title,
-                            style: TextStyle(
-                                fontSize: titleFontSize.sp,
-                                fontWeight: FontWeight.bold,
-                                color: titleColor)),
-                        Text(subtitle,
-                            style: TextStyle(
-                                fontSize: subtitleFontSize.sp,
-                                color: subtitleColor)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12.h),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-                decoration: BoxDecoration(
-                  color: promoBoxColor,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Row(
+          // SingleChildScrollView + a Column sized to its content
+          // (mainAxisSize.min) rather than the available height: the
+          // avatar row + promo box + search bar are close enough to the
+          // default expandedHeight that a slightly longer promoText, a
+          // larger system font scale, or a taller platform font can tip
+          // this into overflow with a plain Column. Wrapping in a
+          // scroll view is the standard defensive fix Flutter's own
+          // RenderFlex-overflow message recommends: it costs nothing
+          // when content fits (nothing to scroll) and silently absorbs
+          // the rare cases where it doesn't, instead of painting the
+          // yellow/black overflow stripes.
+          child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Icon(Icons.local_offer, color: promoIconColor, size: 18.r),
-                    SizedBox(width: 10.w),
+                    CircleAvatar(
+                      radius: 26.r,
+                      backgroundColor: storeAvatarColor,
+                      child: Icon(Icons.store,
+                          size: 28.r, color: storeIconColor),
+                    ),
+                    SizedBox(width: 12.w),
                     Expanded(
-                      child: Text(promoText,
-                          style: TextStyle(
-                              fontSize: promoFontSize.sp,
-                              color: promoTextColor)),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(title,
+                              style: TextStyle(
+                                  fontSize: titleFontSize.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: titleColor)),
+                          Text(subtitle,
+                              style: TextStyle(
+                                  fontSize: subtitleFontSize.sp,
+                                  color: subtitleColor)),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-              SizedBox(height: 10.h),
-              GestureDetector(
-                onTap: onSearchTap,
-                child: Container(
-                  height: 44.h,
+                SizedBox(height: 10.h),
+                Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
                   decoration: BoxDecoration(
-                    color: searchBarColor,
-                    borderRadius: BorderRadius.circular(22.r),
-                    border: Border.all(color: searchBarBorderColor),
+                    color: promoBoxColor,
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Row(
                     children: [
-                      SizedBox(width: 14.w),
-                      Icon(Icons.search, color: searchIconColor, size: 20.r),
-                      SizedBox(width: 8.w),
-                      Text(searchHint,
-                          style: TextStyle(
-                              color: searchHintColor,
-                              fontSize: searchHintFontSize.sp)),
+                      Icon(Icons.local_offer,
+                          color: promoIconColor, size: 18.r),
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: Text(promoText,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: promoFontSize.sp,
+                                color: promoTextColor)),
+                      ),
                     ],
                   ),
                 ),
-              ),
-            ],
+                SizedBox(height: 8.h),
+                GestureDetector(
+                  onTap: onSearchTap,
+                  child: Container(
+                    height: 44.h,
+                    decoration: BoxDecoration(
+                      color: searchBarColor,
+                      borderRadius: BorderRadius.circular(22.r),
+                      border: Border.all(color: searchBarBorderColor),
+                    ),
+                    child: Row(
+                      children: [
+                        SizedBox(width: 14.w),
+                        Icon(Icons.search,
+                            color: searchIconColor, size: 20.r),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            searchHint,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                color: searchHintColor,
+                                fontSize: searchHintFontSize.sp),
+                          ),
+                        ),
+                        SizedBox(width: 14.w),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

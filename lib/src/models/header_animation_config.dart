@@ -58,4 +58,34 @@ class HeaderAnimationConfig {
     enableColorLerp: false,
     enableTextShrink: false,
   );
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is HeaderAnimationConfig &&
+        other.curve == curve &&
+        other.enableFade == enableFade &&
+        other.enableScale == enableScale &&
+        other.enableSlide == enableSlide &&
+        other.enableColorLerp == enableColorLerp &&
+        other.enableTextShrink == enableTextShrink &&
+        other.enableSnap == enableSnap &&
+        other.oneLineThreshold == oneLineThreshold &&
+        other.colorChangeScrollDistance == colorChangeScrollDistance &&
+        other.snapDuration == snapDuration;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        curve,
+        enableFade,
+        enableScale,
+        enableSlide,
+        enableColorLerp,
+        enableTextShrink,
+        enableSnap,
+        oneLineThreshold,
+        colorChangeScrollDistance,
+        snapDuration,
+      );
 }

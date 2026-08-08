@@ -62,4 +62,30 @@ class HeaderLayoutConfig {
       contentBelowBar: contentBelowBar ?? this.contentBelowBar,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is HeaderLayoutConfig &&
+        other.horizontalPadding == horizontalPadding &&
+        other.topPadding == topPadding &&
+        other.bottomPadding == bottomPadding &&
+        other.spacing == spacing &&
+        other.leadingWidth == leadingWidth &&
+        other.trailingWidth == trailingWidth &&
+        other.respectSafeArea == respectSafeArea &&
+        other.contentBelowBar == contentBelowBar;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        horizontalPadding,
+        topPadding,
+        bottomPadding,
+        spacing,
+        leadingWidth,
+        trailingWidth,
+        respectSafeArea,
+        contentBelowBar,
+      );
 }

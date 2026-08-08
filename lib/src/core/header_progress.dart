@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 /// Provides the current scroll progress to any widget inside a
@@ -76,4 +77,13 @@ class HeaderProgress extends InheritedWidget {
       progress != oldWidget.progress ||
       curvedProgress != oldWidget.curvedProgress ||
       height != oldWidget.height;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('progress', progress))
+      ..add(DoubleProperty('curvedProgress', curvedProgress))
+      ..add(DoubleProperty('height', height));
+  }
 }

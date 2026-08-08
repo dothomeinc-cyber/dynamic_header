@@ -165,10 +165,17 @@ class LocationSliverHeader extends StatelessWidget {
                 SizedBox(width: 14.w),
                 Icon(Icons.search, color: searchIconColor, size: 20.r),
                 SizedBox(width: 8.w),
-                Text(searchHint,
+                Expanded(
+                  child: Text(
+                    searchHint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         color: searchHintColor,
-                        fontSize: searchHintFontSize.sp)),
+                        fontSize: searchHintFontSize.sp),
+                  ),
+                ),
+                SizedBox(width: 14.w),
               ],
             ),
           ),
@@ -225,10 +232,17 @@ class LocationSliverHeader extends StatelessWidget {
                       SizedBox(width: 14.w),
                       Icon(Icons.search, color: searchIconColor, size: 20.r),
                       SizedBox(width: 8.w),
-                      Text(searchHint,
+                      Expanded(
+                        child: Text(
+                          searchHint,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                               color: searchHintColor,
-                              fontSize: searchHintFontSize.sp)),
+                              fontSize: searchHintFontSize.sp),
+                        ),
+                      ),
+                      SizedBox(width: 14.w),
                     ],
                   ),
                 ),

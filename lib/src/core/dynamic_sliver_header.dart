@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dynamic_sliver_header_delegate.dart';
 import '../models/header_slot.dart';
@@ -44,12 +45,28 @@ class DynamicSliverHeader extends StatelessWidget {
     this.trailing = const [],
     this.flexibleSpace,
     this.content,
-    required this.colors,
-    required this.layout,
-    required this.animation,
+    this.colors = const HeaderColorConfig(),
+    this.layout = const HeaderLayoutConfig(),
+    this.animation = const HeaderAnimationConfig(),
     this.scrollConfig,
     this.backgroundImage,
   });
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty('expandedHeight', expandedHeight))
+      ..add(DoubleProperty('collapsedHeight', collapsedHeight))
+      ..add(FlagProperty('pinned', value: pinned, ifTrue: 'pinned'))
+      ..add(FlagProperty('floating', value: floating, ifTrue: 'floating'))
+      ..add(FlagProperty('snap', value: snap, ifTrue: 'snap'))
+      ..add(DiagnosticsProperty<HeaderColorConfig>('colors', colors))
+      ..add(DiagnosticsProperty<HeaderLayoutConfig>('layout', layout))
+      ..add(DiagnosticsProperty<HeaderAnimationConfig>('animation', animation))
+      ..add(DiagnosticsProperty<HeaderScrollConfig?>(
+          'scrollConfig', scrollConfig));
+  }
 
   @override
   Widget build(BuildContext context) {

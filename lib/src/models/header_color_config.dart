@@ -40,4 +40,30 @@ class HeaderColorConfig {
     this.expandedGradient,
     this.gradientOpacity = 1.0,
   });
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is HeaderColorConfig &&
+        other.expandedBackgroundColor == expandedBackgroundColor &&
+        other.collapsedBackgroundColor == collapsedBackgroundColor &&
+        other.expandedIconColor == expandedIconColor &&
+        other.collapsedIconColor == collapsedIconColor &&
+        other.expandedTextColor == expandedTextColor &&
+        other.collapsedTextColor == collapsedTextColor &&
+        other.expandedGradient == expandedGradient &&
+        other.gradientOpacity == gradientOpacity;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        expandedBackgroundColor,
+        collapsedBackgroundColor,
+        expandedIconColor,
+        collapsedIconColor,
+        expandedTextColor,
+        collapsedTextColor,
+        expandedGradient,
+        gradientOpacity,
+      );
 }

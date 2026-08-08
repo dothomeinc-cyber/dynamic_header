@@ -79,4 +79,50 @@ class HeaderSlot {
     this.expandedOffset = Offset.zero,
     this.collapsedOffset = Offset.zero,
   });
+
+  // `child` is deliberately excluded from equality: most widgets don't
+  // implement value equality, so including it would make `HeaderSlot`
+  // compare unequal on effectively every rebuild (defeating the point of
+  // comparing at all) unless callers pass identical widget instances.
+  // Instead we key equality off `id` plus the animation/layout flags —
+  // if you rebuild the same slot `id` with different content, pass a new
+  // `id` (or accept that `shouldRebuild` may under-detect a pure content
+  // swap; the header will still repaint on the next scroll frame).
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is HeaderSlot &&
+        other.id == id &&
+        other.fixed == fixed &&
+        other.pinnedOnCollapse == pinnedOnCollapse &&
+        other.hideOnCollapse == hideOnCollapse &&
+        other.fadeOnCollapse == fadeOnCollapse &&
+        other.scaleOnCollapse == scaleOnCollapse &&
+        other.slideOnCollapse == slideOnCollapse &&
+        other.expandedAlignment == expandedAlignment &&
+        other.collapsedAlignment == collapsedAlignment &&
+        other.expandedScale == expandedScale &&
+        other.collapsedScale == collapsedScale &&
+        other.expandedOffset == expandedOffset &&
+        other.collapsedOffset == collapsedOffset &&
+        other.padding == padding;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        fixed,
+        pinnedOnCollapse,
+        hideOnCollapse,
+        fadeOnCollapse,
+        scaleOnCollapse,
+        slideOnCollapse,
+        expandedAlignment,
+        collapsedAlignment,
+        expandedScale,
+        collapsedScale,
+        expandedOffset,
+        collapsedOffset,
+        padding,
+      );
 }

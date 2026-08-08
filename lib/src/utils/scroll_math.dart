@@ -34,8 +34,21 @@ class ScrollMath {
   static bool isFullyExpanded(double progress) => progress <= 0.01;
 
   /// Returns the current rendered height of the header.
-  static double currentHeight(double shrinkOffset, double maxExtent) =>
-      (maxExtent - shrinkOffset).clamp(0.0, maxExtent);
+  ///
+  /// Clamps to [minExtent] (not just 0) so callers that pass a
+  /// [shrinkOffset] beyond the sliver's normal `[0, maxExtent - minExtent]`
+  /// range -- e.g. directly driving the delegate in a test, or any future
+  /// caller outside the standard `SliverPersistentHeaderDelegate.build`
+  /// contract -- can't produce a height smaller than the header is ever
+  /// meant to render at. Under normal scrolling Flutter itself clamps
+  /// `shrinkOffset` to that range before calling `build`, so this is a
+  /// defensive floor rather than something reachable in ordinary use.
+  static double currentHeight(
+    double shrinkOffset,
+    double maxExtent, [
+    double minExtent = 0.0,
+  ]) =>
+      (maxExtent - shrinkOffset).clamp(minExtent, maxExtent);
 
   /// Snap decision: returns 0.0 (expand) or 1.0 (collapse).
   static double calculateSnapProgress(

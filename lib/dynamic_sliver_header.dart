@@ -14,7 +14,7 @@
 ///   hp.isCollapsed     // bool
 /// })
 /// ```
-library dynamic_sliver_header;
+library;
 
 // Core
 export 'src/core/dynamic_sliver_header.dart';
